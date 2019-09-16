@@ -96,6 +96,33 @@ Or use negative sort `/contacts?sort=-firstname` to sort by firstname in `desc` 
 You can even combine multiple sort `/contacts?sort=lastname,-firstname`
 
 
+### Included relationships
+This gem supports [request include params](https://jsonapi.org/format/#fetching-includes). It's very useful when you need to load related resources on client side.
+
+```ruby
+class Post < ActiveRecord::Base
+  include Jsonapi::Include
+
+  has_many :comments
+end
+```
+
+Then you can hit `/posts?include=comments`. You can even combine multiple sort `/posts?include=comments,author`
+
+The gem only handle include on ActiveRecord level. If you want to serialize the data, you must do it in your controller. For example with [fast_jsonapi](https://github.com/Netflix/fast_jsonapi):
+
+```ruby
+class PostsController < ApplicationController
+  def index
+    posts = Post.apply_include(params)
+
+    render json: PostSerializer.new(posts, include: Array.wrap(params[:include]))
+  end
+end
+```
+
+It does not support nested relationships yet.
+
 ### Rescuing a Bad Request in Rails
 
 Jsonapi::scope raises a `Jsonapi::InvalidAttributeError` you can [rescue_from](https://guides.rubyonrails.org/action_controller_overview.html#rescue-from) in your `ApplicationController`.
